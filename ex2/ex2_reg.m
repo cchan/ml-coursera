@@ -70,7 +70,7 @@ lambda = 1;
 fprintf('Cost at initial theta (zeros): %f\n', cost);
 
 fprintf('\nProgram paused. Press enter to continue.\n');
-pause;
+% pause;
 
 %% ============= Part 2: Regularization and Accuracies =============
 %  Optional Exercise:
@@ -84,33 +84,55 @@ pause;
 %
 
 % Initialize fitting parameters
+close all
 initial_theta = zeros(size(X, 2), 1);
 
-% Set regularization parameter lambda to 1 (you should vary this)
-lambda = 1;
+function accuracy = trainOnLambda(X, y, initial_theta, lambda) %Hm closures - we shouldn't have to pass X, y, initial_theta all the way in
 
-% Set Options
-options = optimset('GradObj', 'on', 'MaxIter', 400);
+	% Set Options
+	options = optimset('GradObj', 'on', 'MaxIter', 400);
 
-% Optimize
-[theta, J, exit_flag] = ...
-	fminunc(@(t)(costFunctionReg(t, X, y, lambda)), initial_theta, options);
+	% Optimize
+	[theta, J, exit_flag] = ...
+		fminunc(@(t)(costFunctionReg(t, X, y, lambda)), initial_theta, options);
+	
+	p = predict(theta, X);
+
+	%fprintf('Train Accuracy (lambda %f): %f\n', lambda, mean(double(p == y)) * 100);
+	
+	accuracy = mean(double(p == y));
+end
+
+opts = optimset('MaxIter',100,'TypicalX',100000);
+	% Set regularization parameter lambda to 1 (you should vary this)
+[theta, J, exit_flag] = fminunc(@(l)(trainOnLambda(X,y,initial_theta,l)),0,opts)
+
+for i = (1:200)
+	accuracies(i) = trainOnLambda(X,y,initial_theta,i/100 - 1);
+end
+
+fprintf('Best lambdas: ');
+find(accuracies == max(accuracies)) / 100 - 1
+
+% This fminunc doesn't work very well because it's a sort of stepwise function (% correct)
+
+pause;
 
 % Plot Boundary
-plotDecisionBoundary(theta, X, y);
-hold on;
-title(sprintf('lambda = %g', lambda))
+%plotDecisionBoundary(theta, X, y);
+%hold on;
+%title(sprintf('lambda = %g', lambda))
 
 % Labels and Legend
-xlabel('Microchip Test 1')
-ylabel('Microchip Test 2')
+%xlabel('Microchip Test 1')
+%ylabel('Microchip Test 2')
 
-legend('y = 1', 'y = 0', 'Decision boundary')
-hold off;
+%legend('y = 1', 'y = 0', 'Decision boundary')
+%hold off;
 
 % Compute accuracy on our training set
 p = predict(theta, X);
 
-fprintf('Train Accuracy: %f\n', mean(double(p == y)) * 100);
+%fprintf('Train Accuracy: %f\n', mean(double(p == y)) * 100);
 
 
